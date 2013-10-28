@@ -21,7 +21,9 @@ executable hsqrl
     bytestring,
     scrypt,
     crypto-random,
-    cryptohash
+    cryptohash,
+    binary-strict,
+    either-unwrap
   hs-source-dirs: src
   ghc-options: -Wall
   ghc-prof-options: -auto-all
