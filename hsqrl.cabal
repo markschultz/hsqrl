@@ -28,6 +28,6 @@ executable hsqrl
     binary-strict,
     either-unwrap
   hs-source-dirs: src
-  ghc-options: -Wall
+  -- ghc-options: -Wall
   ghc-prof-options: -auto-all
   default-language:    Haskell2010

@@ -14,16 +14,15 @@ main :: IO ()
 main = do
         mk <- genMasterKey 66
         putStrLn $ "key is " ++ show (BS.length mk) ++ " bytes long."
-        --putStrLn $ show $ B6.encode mk
         --putStrLn $ show $ B6.encode $ trimLeft 7 mk
         let bools = bsToBl (BS.length mk * 8) mk
-        --putStrLn $ show $ take 8 bools
-        putStrLn $ show $ btoi $ take 8 bools
-        putStrLn $ show $ foldli (\z acc x -> z + (2 ^ acc)*x) 0 (8-1) (btoi $ take 8 bools)
-        putStrLn "--------------"
+        let boolsT = drop 7 $ bsToBl ((BS.length mk * 8) ) $ trimLeft 7 mk
         putStrLn $ show $ btoi $ bools
+        putStrLn $ show $ btoi $ boolsT
+        putStrLn "-------foldli-------"
         putStrLn $ show $ foldli (\z acc x -> z + (2 ^ acc)*x) 0 (length bools - 1) (btoi $ bools)
-        putStrLn $ show $ convertBase 2 10 (btoi $ bools)
+        putStrLn "-------convert------"
+        putStrLn $ show $ foldl (\a b -> b + (10*a)) (0 :: Integer) (convertBase 2 10 (btoi $ bools))
 
 genMasterKey :: Int -> IO BS.ByteString
 genMasterKey sz = do
@@ -37,9 +36,8 @@ bsToBl n bs = fromRight $ BG.runBitGet bs (replicateM n BG.getBit)
 
 -- this pads left with false
 trimLeft :: Int -> BS.ByteString -> BS.ByteString
-trimLeft pad bs = fromRight $ BG.runBitGet bs (BG.getRightByteString ((BS.length bs * 8) - pad) )
+trimLeft pad bs = fromRight $ BG.runBitGet bs (BG.getLeftByteString ((BS.length bs * 8) - pad) )
 
---btoi' (x:xs) ni sum = sum + ((2 ^ ni) * (if x == True then 1 else 0)) 
 btoi :: [Bool] -> [Integer]
 btoi [] = []
 btoi (x:xs) = (if x == True then [1] :: [Integer] else [0] :: [Integer]) ++ btoi xs
