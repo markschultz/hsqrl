@@ -1,4 +1,3 @@
-
 module Main where
 
 import Crypto.Scrypt
@@ -15,6 +14,7 @@ import Data.Either.Unwrap
 import Data.Digits
 import Data.Byteable
 import Control.Monad
+import Hecc
 --import Data.Bits
 
 main :: IO ()
@@ -27,11 +27,13 @@ main = do
         salt <- genRandomBS keyBytes
         let epass = scrypt (fromJust $ scryptParamsLen 18 8 1 (toInteger keyBytes)) (Salt salt) (Pass pw)
         let bools = bsToBl (BS.length mk * 8) mk
-        let boolspw = bsToBl ((BS.length $ getHash epass) * 8) (getHash epass)
+        let boolspw = bsToBl (BS.length (getHash epass) * 8) (getHash epass)
         let mixed = zipWith xor'' bools boolspw
         let mixedBs = blToBs (length mixed) $ unDigits 2 (btoi mixed)
         let h = toBytes $ hmacAlg SHA512 mixedBs url
-        putStrLn $ show $ BS.length h
+        let h2 = toBytes $ hmacAlg SHA512 h url
+        let hout = BS.append (BS.take 2 h2) h
+        putStrLn $ show $ BS.length hout
         --let c = unDigits 10 $ convertBase 2 10 (btoi $ bools)
         --let d = (c `mod` (n521 - 1)) + 1
         --putStrLn $ "d bitlength = " ++ show (length $ digits 2 d)

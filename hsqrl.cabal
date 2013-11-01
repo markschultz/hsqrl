@@ -19,6 +19,9 @@ executable hsqrl
   build-depends:
     base >=4.6 && <4.7,
 --    base64-bytestring,
+    hecc,
+    containers,
+    crypto-pubkey-types,
     bytestring,
     byteable,
     digits,
