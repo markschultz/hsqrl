@@ -1,49 +1,43 @@
-{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
 import Crypto.Scrypt
 import Crypto.Random
-import Crypto.MAC.HMAC
 import Crypto.Hash
 import Data.Maybe
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BL
-import Data.ByteString.Lazy.Internal
-import Control.Monad
+import qualified Data.ByteString.Char8 as C8
+--import Data.ByteString.Lazy.Internal
+import Data.ByteString.Lazy (toStrict)
 import qualified Data.Binary.Strict.BitGet as BG
 import qualified Data.Binary.BitPut as BP
 import Data.Either.Unwrap
 import Data.Digits
-import Data.Bits
+import Data.Byteable
+import Control.Monad
+--import Data.Bits
 
 main :: IO ()
 main = do
-        let keyLen = length $ digits 2 n521
-        let pad = 8 - (keyLen `mod` 8)
+        --let keyLen = length $ digits 2 n521
+        --let pad = 8 - (keyLen `mod` 8)
         --let bytes = (keyLen + pad + 64) `div` 8
-        let bytes = (keyLen + pad) `div` 8
-        mk <- genRandomBS bytes
-        salt <- genRandomBS bytes
-        let epass = scrypt (fromJust $ scryptParamsLen 18 8 1 (toInteger bytes)) (Salt salt) (Pass pw)
-        --let bools = (replicate pad False) ++ (drop pad $ bsToBl (BS.length mk * 8) mk)
+        --let bytes = (keyLen + pad) `div` 8
+        mk <- genRandomBS keyBytes
+        salt <- genRandomBS keyBytes
+        let epass = scrypt (fromJust $ scryptParamsLen 18 8 1 (toInteger keyBytes)) (Salt salt) (Pass pw)
         let bools = bsToBl (BS.length mk * 8) mk
         let boolspw = bsToBl ((BS.length $ getHash epass) * 8) (getHash epass)
         let mixed = zipWith xor'' bools boolspw
         let mixedBs = blToBs (length mixed) $ unDigits 2 (btoi mixed)
-        let c = unDigits 10 $ convertBase 2 10 (btoi $ bools)
-        let d = (c `mod` (n521 - 1)) + 1
-        putStrLn $ "key is " ++ show (toInteger $ BS.length mk) ++ " bytes long."
-        putStrLn $ "salt is " ++ show (toInteger $ BS.length salt) ++ " bytes long."
-        putStrLn $ "scrypt is " ++ show (BS.length $ getHash epass) ++ " bytes long."
-        --putStrLn $ show pad ++ " = pad length"
-        putStrLn $ "bpw " ++ (show $ length $ boolspw)
-        putStrLn $ "b " ++ (show $ length $ bools)
-        putStrLn $ "c = " ++ show c
-        putStrLn $ "d = " ++ show ((c `mod` (n521 - 1)) + 1)
-        putStrLn $ "mixedbs = " ++ show mixedBs
+        let h = toBytes $ hmacAlg SHA512 mixedBs url
+        putStrLn $ show $ BS.length h
+        --let c = unDigits 10 $ convertBase 2 10 (btoi $ bools)
+        --let d = (c `mod` (n521 - 1)) + 1
         --putStrLn $ "d bitlength = " ++ show (length $ digits 2 d)
         --putStrLn $ "c > n - 2 : " ++ show (c > (n521 - 2))
         --putStrLn $ show $ foldli (\z acc x -> z + (2 ^ acc)*x) 0 (length bools - 1) (btoi $ bools)
+        putStrLn "Done."
 
 genRandomBS :: Int -> IO BS.ByteString
 genRandomBS sz = do
@@ -55,8 +49,8 @@ genRandomBS sz = do
 bsToBl :: Int -> BS.ByteString -> [Bool]
 bsToBl n bs = fromRight $ BG.runBitGet bs (replicateM n BG.getBit)
 
-blToBs :: Int -> Integer -> Data.ByteString.Lazy.Internal.ByteString
-blToBs n int = BP.runBitPut $ BP.putNBits n int
+blToBs :: Int -> Integer -> BS.ByteString
+blToBs n int = toStrict $ BP.runBitPut $ BP.putNBits n int
 
 btoi :: [Bool] -> [Integer]
 btoi [] = []
@@ -96,5 +90,11 @@ n521 :: Integer
 n521 = 6864797660130609714981900799081393217269435300143305409394463459185543183397655394245057746333217197532963996371363321113864768612440380340372808892707005449
 
 pw :: BS.ByteString
-pw = "test"
+pw = C8.pack "test"
+
+keyBytes :: Int
+keyBytes = 64
+
+url :: BS.ByteString
+url = C8.pack "example.com"
 
