@@ -18,8 +18,9 @@ executable hsqrl
   main-is: hsqrl.hs
   build-depends:
     base >=4.6 && <4.7,
-    base64-bytestring,
+--    base64-bytestring,
     bytestring,
+    byteable,
     digits,
     scrypt,
     crypto-random,
@@ -29,5 +30,5 @@ executable hsqrl
     either-unwrap
   hs-source-dirs: src
   -- ghc-options: -Wall
-  ghc-prof-options: -auto-all
+  -- ghc-prof-options: -auto-all
   default-language:    Haskell2010
