@@ -18,10 +18,10 @@ executable hsqrl
   main-is: hsqrl.hs
   build-depends:
     base >=4.6 && <4.7,
---    base64-bytestring,
     hecc,
     containers,
     crypto-pubkey-types,
+    crypto-api,
     bytestring,
     byteable,
     digits,

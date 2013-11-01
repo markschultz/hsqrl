@@ -1,8 +1,9 @@
+{-# LANGUAGE PackageImports #-}
 module Main where
 
 import Crypto.Scrypt
-import Crypto.Random
-import Crypto.Hash
+import "crypto-random" Crypto.Random
+import "cryptohash" Crypto.Hash
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as C8
@@ -13,6 +14,10 @@ import qualified Data.Binary.BitPut as BP
 import Data.Either.Unwrap
 import Data.Digits
 import Data.Byteable
+import Crypto.Util (bs2i, i2bs)
+import Codec.Crypto.ECC.Base (pmul, getx, modinv)
+import Crypto.Types.PubKey.ECDSA (PrivateKey(..), PublicKey(..))
+import Crypto.Types.PubKey.ECC (Curve(CurveFP), CurvePrime(..), CurveCommon(..), Point(..))
 import Control.Monad
 import Hecc
 --import Data.Bits
@@ -40,6 +45,14 @@ main = do
         --putStrLn $ "c > n - 2 : " ++ show (c > (n521 - 2))
         --putStrLn $ show $ foldli (\z acc x -> z + (2 ^ acc)*x) 0 (length bools - 1) (btoi $ bools)
         putStrLn "Done."
+
+sign :: PrivateKey -> BS.ByteString -> Integer -> (Integer, Integer)
+sign (PrivateKey curve@(CurveFP (CurvePrime _ (CurveCommon {ecc_g = g, ecc_n = n}))) d) hash k =
+        (r,s)
+        where
+            l = length (unroll n)
+            r = getx (pmul (point2hecc curve g) k) `mod` n
+            s = ((bs2i hash + (r * d)) * modinv k n) `mod` n
 
 genRandomBS :: Int -> IO BS.ByteString
 genRandomBS sz = do
